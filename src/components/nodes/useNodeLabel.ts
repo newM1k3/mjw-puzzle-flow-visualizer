@@ -1,11 +1,16 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useReactFlow } from '@xyflow/react';
 
 export function useNodeLabel(id: string, initialLabel: string) {
   const [editing, setEditing] = useState(false);
   const [label, setLabel] = useState(initialLabel);
-  const { setNodes } = useReactFlow();
+  const { updateNodeData } = useReactFlow();
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Sync when the label is updated externally (e.g. from the Inspector panel)
+  useEffect(() => {
+    if (!editing) setLabel(initialLabel);
+  }, [initialLabel, editing]);
 
   const startEdit = useCallback(() => {
     setEditing(true);
@@ -14,12 +19,8 @@ export function useNodeLabel(id: string, initialLabel: string) {
 
   const commitEdit = useCallback(() => {
     setEditing(false);
-    setNodes((nds) =>
-      nds.map((n) =>
-        n.id === id ? { ...n, data: { ...n.data, label } } : n
-      )
-    );
-  }, [id, label, setNodes]);
+    updateNodeData(id, { label });
+  }, [id, label, updateNodeData]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -32,7 +33,7 @@ export function useNodeLabel(id: string, initialLabel: string) {
         setLabel(initialLabel);
       }
     },
-    [commitEdit, initialLabel]
+    [commitEdit, initialLabel],
   );
 
   return { editing, label, setLabel, startEdit, commitEdit, handleKeyDown, inputRef };

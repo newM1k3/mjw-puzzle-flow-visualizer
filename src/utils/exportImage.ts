@@ -1,5 +1,4 @@
 import { toPng } from 'html-to-image';
-import jsPDF from 'jspdf';
 
 function hideExportUi(element: Element): HTMLElement[] {
   const selectors = ['.react-flow__controls', '.react-flow__minimap', '.react-flow__panel'];
@@ -18,10 +17,10 @@ function restoreExportUi(els: HTMLElement[]): void {
   els.forEach((el) => { el.style.visibility = 'visible'; });
 }
 
-export const exportFlowToPDF = async (
+export async function exportFlowToPNG(
   elementId: string,
-  filename = 'puzzle-flow.pdf',
-): Promise<void> => {
+  filename = 'puzzle-flow.png',
+): Promise<void> {
   const element = document.getElementById(elementId);
   if (!element) return;
 
@@ -32,19 +31,14 @@ export const exportFlowToPDF = async (
       backgroundColor: '#0f172a',
       pixelRatio: 2,
     });
-
-    const pdf = new jsPDF({
-      orientation: 'landscape',
-      unit: 'px',
-      format: [element.offsetWidth, element.offsetHeight],
-    });
-
-    pdf.addImage(dataUrl, 'PNG', 0, 0, element.offsetWidth, element.offsetHeight);
-    pdf.save(filename);
+    const a = document.createElement('a');
+    a.download = filename;
+    a.href = dataUrl;
+    a.click();
   } catch (err) {
-    console.error('Failed to export PDF', err);
-    alert('Failed to export PDF. Please try again.');
+    console.error('Failed to export PNG', err);
+    alert('Failed to export PNG. Please try again.');
   } finally {
     restoreExportUi(hidden);
   }
-};
+}
