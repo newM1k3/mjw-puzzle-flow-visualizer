@@ -1,8 +1,10 @@
+import type { ReactNode } from 'react';
+
 interface NodeDefinition {
   type: string;
   label: string;
   description: string;
-  preview: React.ReactNode;
+  preview: ReactNode;
 }
 
 const NODE_DEFINITIONS: NodeDefinition[] = [
@@ -79,10 +81,13 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-72 bg-slate-800/80 border-r border-slate-700 flex flex-col h-full overflow-y-auto">
+    <aside className="w-72 bg-slate-800/80 border-r border-slate-700 flex flex-col h-full overflow-y-auto hidden md:flex" aria-label="Node palette and onboarding tips">
       <div className="px-4 pt-5 pb-3 border-b border-slate-700">
         <h2 className="text-slate-200 font-semibold text-sm uppercase tracking-widest">Node Palette</h2>
         <p className="text-slate-500 text-xs mt-1">Drag nodes onto the canvas to build your flow.</p>
+        <div className="mt-3 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-[11px] leading-relaxed text-slate-400">
+          Start with one obvious clue, connect dependencies left-to-right, then use Metrics to catch bottlenecks before playtesting.
+        </div>
       </div>
 
       <div className="flex-1 py-3 px-3 space-y-2">
@@ -91,7 +96,11 @@ export default function Sidebar() {
             key={node.type}
             draggable
             onDragStart={(e) => onDragStart(e, node.type)}
-            className="flex items-center gap-3 px-3 py-3 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700/70 hover:border-slate-600 cursor-grab active:cursor-grabbing transition-all duration-150 group"
+            className="flex items-center gap-3 px-3 py-3 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700/70 hover:border-slate-600 cursor-grab active:cursor-grabbing transition-all duration-150 group focus-within:ring-2 focus-within:ring-blue-400"
+            role="button"
+            tabIndex={0}
+            aria-label={`Drag ${node.label} node onto the canvas. ${node.description}`}
+            title={`Drag ${node.label} onto the canvas`}
           >
             <div className="flex-shrink-0 flex items-center justify-center w-16 h-16">
               {node.preview}
@@ -106,7 +115,7 @@ export default function Sidebar() {
 
       <div className="px-4 py-4 border-t border-slate-700">
         <p className="text-slate-600 text-[10px] leading-relaxed">
-          Double-click any node on the canvas to edit its label inline.
+          Double-click any node to edit its label. Press ? for keyboard shortcuts and the full onboarding guide.
         </p>
       </div>
     </aside>

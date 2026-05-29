@@ -1,6 +1,12 @@
 # MJW Puzzle Flow Visualizer
 
-A premium drag-and-drop canvas tool for escape room designers. It helps design, save, export, validate, and review puzzle flows with an escape-room-specific React Flow canvas. The app now includes local/offline saved flows, optional **PocketBase cloud saves**, JSON import/export, validation/inspector tooling, and an optional **AI Flow Coach** that analyzes the current canvas through a secure Netlify Function.
+A premium drag-and-drop canvas tool for escape room designers. It helps design, save, export, validate, and review puzzle flows with an escape-room-specific React Flow canvas. The app includes local/offline saved flows, optional **PocketBase cloud saves**, JSON import/export, validation/inspector tooling, production onboarding guidance, and an optional **AI Flow Coach** that analyzes the current canvas through a secure Netlify Function.
+
+## Screenshots
+
+| Desktop Visual Editor | Mobile/Desktop Recommended State |
+| --- | --- |
+| ![MJW Puzzle Flow Visualizer desktop interface](public/screenshots/puzzle-flow-desktop.png) | ![MJW Puzzle Flow Visualizer mobile desktop-recommended state](public/screenshots/puzzle-flow-mobile.png) |
 
 ## What It Does
 
@@ -21,10 +27,29 @@ Unlike generic diagramming tools such as Visio or Miro, this tool uses terminolo
 - Draw connections between nodes by dragging from any handle.
 - Double-click a node label to edit it inline.
 - Use the inspector to edit design metadata such as status, solve time, difficulty, clue count, notes, props, and reset notes.
-- Use the validation panel to spot missing start/finale nodes, disconnected nodes, bottlenecks, and flow-shape risks.
+- Use the validation/metrics panel to spot missing start/finale nodes, disconnected nodes, bottlenecks, and flow-shape risks.
 - Create, rename, duplicate, load, delete, import, and export saved flows.
 - Export the canvas to JSON, PNG, or PDF.
 - Optionally use AI coaching for pacing, bottleneck, clue-fairness, and starter-flow recommendations.
+
+## How to Use
+
+The app opens with an example escape-room flow so new users can see a complete path immediately. Start by dragging nodes from the left palette onto the canvas, then connect them left-to-right to model player progress. Select any node to edit its metadata in the inspector. Use metrics to find structural issues before playtesting, and use saved flows or JSON export when handing the design to another builder.
+
+Small screens are supported for review and export, but detailed editing is intentionally marked **desktop recommended** because precise drag-and-drop, panning, zooming, and inspector editing work best on a laptop or desktop display.
+
+## Keyboard Shortcuts
+
+| Shortcut | Action | Notes |
+| --- | --- | --- |
+| `Delete` / `Backspace` | Delete selected nodes or edges | Available when focus is not inside a text field. |
+| Mouse wheel / trackpad | Zoom | Provided by React Flow canvas controls. |
+| Drag canvas background | Pan | Use the canvas background, not a node. |
+| `Ctrl/Cmd + S` | Save current flow | Saves to local storage/autosave flow state. |
+| `Ctrl/Cmd + I` | Import JSON | Opens the JSON import file picker. |
+| `Ctrl/Cmd + E` | Export JSON | Downloads a portable flow JSON file. |
+| `Ctrl/Cmd + R` | Reset to example flow | Prompts before replacing the current canvas. |
+| `?` | Open How to Use guide | Displays onboarding tips and shortcut help. |
 
 ## Stack
 
@@ -67,16 +92,23 @@ npm run lint       # ESLint check
 npm run typecheck  # TypeScript type check (no emit)
 ```
 
+## Environment Variables
+
+All environment variables are optional unless you enable the related feature. The app remains production-usable in local-only mode with no configured variables.
+
+| Variable | Required? | Scope | Enables | Description |
+| --- | --- | --- | --- | --- |
+| `VITE_POCKETBASE_URL` | Optional | Frontend/public | PocketBase sign-in and cloud saved flows | Public PocketBase/PocketHost URL used for normal user authentication and user-scoped CRUD. Example: `https://mjwdesign-core.pockethost.io`. |
+| `OPENAI_API_KEY` | Optional | Netlify Function/server only | AI Flow Coach through OpenAI | Server-side OpenAI API key. Preferred provider when present. Never expose this as a `VITE_` variable. |
+| `GEMINI_API_KEY` | Optional | Netlify Function/server only | AI Flow Coach through Gemini fallback | Server-side Gemini API key. Used only when `OPENAI_API_KEY` is absent. Never expose this as a `VITE_` variable. |
+| `AI_MODEL` | Optional | Netlify Function/server only | AI model override | Defaults to `gpt-4.1-mini` for OpenAI or `gemini-1.5-flash` for Gemini. |
+| `PB_SUPERUSER_TOKEN` | Not used by current release | Netlify Function/server only | Reserved for future privileged PocketBase operations | Do not put this in frontend code. Use only inside future Netlify Functions that perform admin tasks. |
+
 ## Saved Flows and PocketBase Cloud Saves
 
 The app works fully with **no environment variables**. In local-only mode, saved flows are stored in browser `localStorage`, and users can still create, rename, duplicate, load, delete, import, and export flows as JSON. This preserves offline use and makes the visualizer safe to deploy before PocketBase is configured.
 
 Cloud saves are optional. When `VITE_POCKETBASE_URL` is configured, the Saved Flows panel displays a PocketBase sign-in form. Authenticated users can save flow records to the `puzzle_flows` collection. Normal user authentication runs through the public PocketBase URL; **no PocketBase superuser token is placed in frontend code**.
-
-| Variable | Required | Scope | Description |
-| --- | --- | --- | --- |
-| `VITE_POCKETBASE_URL` | Optional | Frontend | Public PocketBase/PocketHost URL used for normal user authentication and user-scoped CRUD. Example: `https://mjwdesign-core.pockethost.io`. |
-| `PB_SUPERUSER_TOKEN` | Not used by this feature yet | Server only | Reserve this for future Netlify Functions that perform privileged/admin PocketBase operations. Never expose it to Vite or browser code. |
 
 ### Recommended `puzzle_flows` Collection
 
@@ -102,19 +134,18 @@ Recommended collection rules should allow authenticated users to create records 
 
 The AI Flow Coach is implemented through `netlify/functions/ai-flow-coach.cjs`. Browser code calls `/.netlify/functions/ai-flow-coach`; it never calls OpenAI or Gemini directly and never includes API keys in frontend code.
 
-Configure one provider in your Netlify site settings under **Site configuration → Environment variables**.
-
-| Variable | Required | Description |
-| --- | --- | --- |
-| `OPENAI_API_KEY` | Required if using OpenAI | Server-side OpenAI API key. Preferred first provider. |
-| `GEMINI_API_KEY` | Required if using Gemini | Server-side Gemini API key. Used only when `OPENAI_API_KEY` is absent. |
-| `AI_MODEL` | Optional | Model override. Defaults to `gpt-4.1-mini` for OpenAI or `gemini-1.5-flash` for Gemini. |
-
-After adding environment variables, redeploy the Netlify site. If no API key is configured, the app displays a setup message instead of failing silently.
+Configure one provider in your Netlify site settings under **Site configuration → Environment variables**. After adding environment variables, redeploy the Netlify site. If no API key is configured, the app displays a setup message instead of failing silently.
 
 ## Netlify Deployment
 
-The `netlify.toml` at the project root configures the Vite build and static routing.
+The `netlify.toml` at the project root configures the Vite build and static routing. To deploy on Netlify, connect this GitHub repository and use the following production settings.
+
+| Setting | Value |
+| --- | --- |
+| Build command | `npm run build` |
+| Publish directory | `dist` |
+| Functions directory | `netlify/functions` |
+| Node/package install | Netlify default Node environment with `npm install` |
 
 ```toml
 [build]
@@ -127,7 +158,11 @@ The `netlify.toml` at the project root configures the Vite build and static rout
   status = 200
 ```
 
-Deploy through Netlify by connecting this GitHub repository, then set `VITE_POCKETBASE_URL` if you want cloud saves and the AI provider variables above if you want AI coaching enabled.
+Deploy first with no environment variables to confirm the local-only app works, then add `VITE_POCKETBASE_URL` for cloud saves and AI provider variables for the AI Flow Coach if those features are needed.
+
+## Accessibility and Production Readiness
+
+The release UI includes accessible labels on major toolbar actions, panel tabs, import/export controls, saved-flow actions, and AI coach controls. The How to Use guide documents shortcuts and onboarding expectations, while the mobile state clearly explains that detailed editing is desktop recommended. Empty and no-configuration states are intentionally explicit so the app remains understandable before optional services are configured.
 
 ## Project Structure
 
@@ -156,7 +191,24 @@ src/
 netlify/
   functions/
     ai-flow-coach.cjs         # Secure server-side AI provider integration
+public/
+  screenshots/                # README screenshots
 ```
+
+## Changelog
+
+### v1.0.0 — Production Readiness Release
+
+- Added polished onboarding, a How to Use modal, shortcut documentation, and a visible version label.
+- Added release-ready empty states, accessibility labels, focus styles, and mobile/tablet desktop-recommended guidance.
+- Added README screenshots, Netlify deployment instructions, environment variable documentation, and this changelog.
+- Preserved local-only operation with optional PocketBase cloud saves and optional server-side AI coaching.
+
+### Previous Build Milestones
+
+- Added optional AI Flow Coach through secure Netlify Functions with OpenAI-first and Gemini-fallback provider handling.
+- Added local saved flows, JSON import/export, optional PocketBase cloud persistence, and conflict/version metadata.
+- Added inspector, validation/metrics panels, PNG/PDF export, and escape-room-specific node types.
 
 ---
 

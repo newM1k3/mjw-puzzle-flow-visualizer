@@ -121,7 +121,11 @@ function FlowCanvasInner({
   const isEmpty = nodes.length === 0;
 
   return (
-    <div className="relative w-full h-full">
+    <div
+      className="relative w-full h-full"
+      role="application"
+      aria-label="Puzzle flow canvas. Drag nodes from the palette, connect them into a puzzle sequence, zoom with the mouse wheel, pan by dragging the canvas, and press Delete or Backspace to remove selected items."
+    >
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -137,12 +141,15 @@ function FlowCanvasInner({
         fitView={fitOnLoad}
         fitViewOptions={{ padding: 0.2 }}
         className="bg-slate-900"
-        deleteKeyCode="Delete"
+        deleteKeyCode={['Delete', 'Backspace']}
         connectionLineStyle={{ stroke: '#94a3b8', strokeWidth: 2 }}
         onMoveEnd={(_, viewport) => onViewportChange?.(viewport)}
       >
         <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#334155" />
-        <Controls className="!bg-slate-800 !border-slate-700 !shadow-xl" />
+        <Controls
+          className="!bg-slate-800 !border-slate-700 !shadow-xl"
+          aria-label="Canvas zoom and fit controls"
+        />
       </ReactFlow>
 
       {isEmpty && (
@@ -158,7 +165,9 @@ function FlowCanvasInner({
             </p>
             <button
               onClick={onResetToExample}
-              className="pointer-events-auto px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-colors duration-150"
+              className="pointer-events-auto px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              aria-label="Reset the canvas to the example puzzle flow"
+              type="button"
             >
               Reset to Example Flow
             </button>

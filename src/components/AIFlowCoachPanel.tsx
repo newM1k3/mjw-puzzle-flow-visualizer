@@ -267,14 +267,15 @@ export default function AIFlowCoachPanel({ flow }: AIFlowCoachPanelProps) {
           type="button"
           onClick={runCoach}
           disabled={loading || (selectedAction === 'starter_flow' && theme.trim().length < 4)}
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-cyan-500 bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-cyan-950/40 transition hover:bg-cyan-500 disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-cyan-500 bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-cyan-950/40 transition hover:bg-cyan-500 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-cyan-300"
+          aria-label={`Run AI Flow Coach action: ${selectedActionDetails.label}`}
         >
           {loading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
           {loading ? 'Coaching…' : 'Run AI Coach'}
         </button>
 
         {error && (
-          <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-100">
+          <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-100" role="alert">
             <div className="flex items-start gap-2">
               <AlertTriangle size={16} className="mt-0.5 flex-shrink-0 text-amber-300" />
               <div>
@@ -298,7 +299,8 @@ export default function AIFlowCoachPanel({ flow }: AIFlowCoachPanelProps) {
               <button
                 type="button"
                 onClick={copyResult}
-                className="flex items-center gap-1.5 rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs font-medium text-slate-300 transition hover:border-slate-500 hover:text-white"
+                className="flex items-center gap-1.5 rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs font-medium text-slate-300 transition hover:border-slate-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-300"
+                aria-label="Copy AI Flow Coach recommendations to clipboard"
               >
                 {copied ? <CheckCircle2 size={13} className="text-emerald-300" /> : <Clipboard size={13} />}
                 {copied ? 'Copied' : 'Copy'}
