@@ -29,12 +29,15 @@ import {
   PanelRightClose,
   SlidersHorizontal,
   BarChart2,
+  Bot,
 } from 'lucide-react';
 
 import Sidebar from './components/Sidebar';
+import SavedFlowsPanel from './components/SavedFlowsPanel';
 import FlowCanvas from './components/FlowCanvas';
 import InspectorPanel from './components/InspectorPanel';
 import ValidationPanel from './components/ValidationPanel';
+import AIFlowCoachPanel from './components/AIFlowCoachPanel';
 import { exportFlowToPDF } from './utils/exportPdf';
 import { exportFlowToPNG } from './utils/exportImage';
 import {
@@ -46,9 +49,10 @@ import {
 import { INITIAL_NODES, INITIAL_EDGES } from './utils/initialFlow';
 import { analyzeGraph } from './utils/graphAnalysis';
 import type { NodeMetadata, EscapeNodeType } from './types/nodeMetadata';
+import type { FlowSnapshot } from './types/flow';
 
 type SaveStatus = 'saved' | 'unsaved';
-type RightTab = 'inspector' | 'metrics';
+type RightTab = 'inspector' | 'metrics' | 'coach';
 
 const EDGE_OPTIONS = {
   animated: true,
@@ -98,6 +102,8 @@ export default function App() {
 
   useEffect(() => { nodesRef.current = nodes; }, [nodes]);
   useEffect(() => { edgesRef.current = edges; }, [edges]);
+
+  const currentFlow = useMemo<FlowSnapshot>(() => ({ nodes, edges }), [nodes, edges]);
 
   // ── Auto-save ────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -168,7 +174,7 @@ export default function App() {
     [],
   );
 
-  // ── Toolbar actions ──────────────────────────────────────────────────────
+  // ── Toolbar and persistence actions ──────────────────────────────────────
   const handleSaveNow = useCallback(() => {
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     saveFlow(nodes, edges, viewportRef.current ?? undefined);
@@ -184,6 +190,14 @@ export default function App() {
     if (saved.viewport) viewportRef.current = saved.viewport;
     setSelectedNodeId(null);
     setSaveStatus('saved');
+  }, [saveStatus]);
+
+  const handleLoadFlow = useCallback((nextFlow: FlowSnapshot) => {
+    if (saveStatus === 'unsaved' && !window.confirm('Load this flow? Unsaved canvas changes will be replaced.')) return;
+    setNodes(nextFlow.nodes);
+    setEdges(nextFlow.edges);
+    setSelectedNodeId(null);
+    setSaveStatus('unsaved');
   }, [saveStatus]);
 
   const handleResetToExample = useCallback(() => {
@@ -293,6 +307,7 @@ export default function App() {
       <div className="flex flex-1 overflow-hidden">
         <ReactFlowProvider>
           <Sidebar />
+          <SavedFlowsPanel currentFlow={currentFlow} onLoadFlow={handleLoadFlow} />
           <FlowCanvas
             nodes={nodes}
             edges={edges}
@@ -309,7 +324,7 @@ export default function App() {
 
           {/* Right Panel */}
           {rightPanelOpen && (
-            <div className="w-80 flex-shrink-0 bg-slate-850 border-l border-slate-700 flex flex-col overflow-hidden"
+            <div className="w-96 flex-shrink-0 bg-slate-850 border-l border-slate-700 flex flex-col overflow-hidden"
               style={{ backgroundColor: '#0f1929' }}>
               {/* Tab bar */}
               <div className="flex border-b border-slate-700 flex-shrink-0">
@@ -326,18 +341,24 @@ export default function App() {
                   label="Metrics"
                   badge={warningCount > 0 ? warningCount : undefined}
                 />
+                <TabButton
+                  active={activeTab === 'coach'}
+                  onClick={() => setActiveTab('coach')}
+                  icon={<Bot size={12} />}
+                  label="Coach"
+                />
               </div>
 
               {/* Tab content */}
               <div className="flex-1 overflow-hidden">
-                {activeTab === 'inspector' ? (
+                {activeTab === 'inspector' && (
                   <InspectorPanel
                     selectedNode={selectedNode}
                     onUpdateNode={onUpdateNode}
                   />
-                ) : (
-                  <ValidationPanel nodes={nodes} edges={edges} />
                 )}
+                {activeTab === 'metrics' && <ValidationPanel nodes={nodes} edges={edges} />}
+                {activeTab === 'coach' && <AIFlowCoachPanel flow={currentFlow} />}
               </div>
             </div>
           )}
