@@ -51,6 +51,7 @@ import {
   exportFlowAsJson,
   parseImportedJson,
 } from './utils/flowStorage';
+import { pb } from './lib/pocketbase';
 import { INITIAL_NODES, INITIAL_EDGES } from './utils/initialFlow';
 import { analyzeGraph } from './utils/graphAnalysis';
 import type { NodeMetadata, EscapeNodeType } from './types/nodeMetadata';
@@ -127,6 +128,13 @@ export default function App() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    // SSO token handoff from the ImmersiveKit dashboard
+    const token = params.get('token');
+    if (token) {
+      pb.authStore.save(token, null);
+      pb.collection('users').authRefresh().catch(() => pb.authStore.clear());
+      window.history.replaceState({}, '', window.location.pathname);
+    }
     if (params.get('help') === '1') setShowHowToUse(true);
   }, []);
 
