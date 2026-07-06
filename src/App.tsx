@@ -309,7 +309,7 @@ export default function App() {
           </div>
           <div className="hidden sm:block">
             <h1 className="text-slate-100 font-bold text-xs leading-tight tracking-tight">
-              Escape Room Puzzle Flow Visualizer
+              Flow
             </h1>
             <p className="text-[10px] text-slate-500 leading-tight">v{APP_VERSION} · production ready</p>
           </div>
@@ -433,7 +433,7 @@ export default function App() {
       </main>
 
       <footer className="hidden sm:flex items-center justify-between px-4 py-1.5 border-t border-slate-800 bg-slate-950 text-[10px] text-slate-500 flex-shrink-0">
-        <span>v{APP_VERSION} · MJW Puzzle Flow Visualizer</span>
+        <span>v{APP_VERSION} · ImmersiveKit Flow</span>
         <span>Press <kbd className="px-1 py-0.5 rounded bg-slate-800 text-slate-300">?</kbd> for shortcuts and onboarding tips.</span>
       </footer>
 
@@ -526,7 +526,7 @@ function HowToUseModal({ onClose, version }: { onClose: () => void; version: str
       <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl">
         <div className="sticky top-0 flex items-start justify-between gap-4 border-b border-slate-700 bg-slate-900 px-5 py-4">
           <div>
-            <h2 id="how-to-use-title" className="text-lg font-bold text-slate-100">How to Use the Puzzle Flow Visualizer</h2>
+            <h2 id="how-to-use-title" className="text-lg font-bold text-slate-100">How to Use the Flow</h2>
             <p className="text-xs text-slate-500">Version {version} · desktop editing recommended</p>
           </div>
           <button
