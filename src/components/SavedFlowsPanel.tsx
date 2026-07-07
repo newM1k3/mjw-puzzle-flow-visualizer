@@ -1,6 +1,7 @@
 import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
+  Building2,
   CheckCircle2,
   Cloud,
   Copy,
@@ -18,6 +19,8 @@ import {
 } from 'lucide-react';
 import pb, { isPocketBaseConfigured, pocketBaseUrl } from '../lib/pocketbase';
 import type { FlowSnapshot, FlowVisibility, SavedFlow } from '../types/flow';
+import { buildFlowFromGeneratedRoom } from '../utils/generatedFlow';
+import { listGeneratedVenueRooms, type VenueRoomOption } from '../utils/venueImport';
 
 const LOCAL_STORAGE_KEY = 'mjw-puzzle-flow-visualizer.savedFlows.v1';
 const DEFAULT_TITLE = 'Untitled Puzzle Flow';
@@ -137,6 +140,8 @@ export default function SavedFlowsPanel({ currentFlow, onLoadFlow }: SavedFlowsP
   const [isBusy, setIsBusy] = useState(false);
   const [isCloudLoading, setIsCloudLoading] = useState(false);
   const [authRevision, setAuthRevision] = useState(0);
+  const [venueRooms, setVenueRooms] = useState<VenueRoomOption[] | null>(null);
+  const [isVenueLoading, setIsVenueLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const isAuthenticated = Boolean(pb?.authStore.isValid && pb.authStore.record?.id);
@@ -277,6 +282,33 @@ export default function SavedFlowsPanel({ currentFlow, onLoadFlow }: SavedFlowsP
     setActiveBaselineUpdatedAt(flow.updatedAt);
     setStatus(`Loaded “${flow.title}” from ${flow.source === 'cloud' ? 'PocketBase' : 'local storage'}.`);
   }, [activeFlow, activeFlowId, currentFlow, onLoadFlow]);
+
+  const handleLoadVenueRooms = useCallback(async () => {
+    setIsVenueLoading(true);
+    setError('');
+    try {
+      const rooms = await listGeneratedVenueRooms();
+      setVenueRooms(rooms);
+      setStatus(rooms.length
+        ? `Found ${rooms.length} generated room${rooms.length === 1 ? '' : 's'} in your venue.`
+        : 'No generated rooms in your venue yet. Use Create → Send to My Venue first.');
+    } catch (venueError) {
+      console.error(venueError);
+      setError('Could not load your venue rooms. Confirm you are signed in with your ImmersiveKit account.');
+    } finally {
+      setIsVenueLoading(false);
+    }
+  }, []);
+
+  const handleImportVenueRoom = useCallback((option: VenueRoomOption) => {
+    const snapshot = buildFlowFromGeneratedRoom(option.room);
+    const newFlow = makeLocalFlow(snapshot, option.title);
+    upsertLocalFlow(newFlow);
+    onLoadFlow(cloneFlow(snapshot));
+    setActiveFlowId(newFlow.id);
+    setActiveBaselineUpdatedAt(newFlow.updatedAt);
+    setStatus(`Imported “${option.title}” from your venue. Saved as a local flow.`);
+  }, [onLoadFlow, upsertLocalFlow]);
 
   const handleCreate = useCallback(() => {
     const title = window.prompt('New flow title:', DEFAULT_TITLE) || DEFAULT_TITLE;
@@ -546,6 +578,32 @@ export default function SavedFlowsPanel({ currentFlow, onLoadFlow }: SavedFlowsP
           </button>
         </div>
         <input ref={fileInputRef} type="file" accept="application/json,.json" className="hidden" onChange={handleImportJson} />
+      </div>
+
+      <div className="p-4 space-y-2 border-b border-slate-800">
+        <button
+          onClick={() => void handleLoadVenueRooms()}
+          disabled={!isAuthenticated || isVenueLoading}
+          title={isAuthenticated ? 'List rooms sent to your venue from Create' : 'Sign in to import rooms from your venue'}
+          className="flex w-full items-center justify-center gap-1.5 rounded-md border border-violet-500/50 bg-violet-600 px-3 py-2 text-xs font-semibold text-white hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {isVenueLoading ? <Loader2 size={13} className="animate-spin" /> : <Building2 size={13} />}
+          Import from My Venue
+        </button>
+        {venueRooms !== null && venueRooms.length > 0 && (
+          <div className="space-y-1.5">
+            {venueRooms.map((option) => (
+              <button
+                key={option.experienceId}
+                onClick={() => handleImportVenueRoom(option)}
+                className="flex w-full items-center justify-between gap-2 rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-left text-xs text-slate-200 hover:border-violet-500/50 hover:bg-slate-800"
+              >
+                <span className="truncate">{option.title}</span>
+                <span className="flex-shrink-0 text-[10px] text-slate-500">{option.room.puzzle_flow?.length ?? 0} puzzles</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {(status || error) && (
