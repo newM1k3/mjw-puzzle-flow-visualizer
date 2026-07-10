@@ -154,6 +154,18 @@ export default function SavedFlowsPanel({ currentFlow, onLoadFlow }: SavedFlowsP
     saveLocalFlows(localFlows);
   }, [localFlows]);
 
+  // React to auth changes — including the SSO ?token= handoff performed in
+  // App.tsx — so cloud mode lights up (and cloud flows load) without needing a
+  // manual sign-in or refresh. authStore.onChange fires when the token is saved
+  // and again once authRefresh populates the user record.
+  useEffect(() => {
+    if (!pb) return;
+    const unsubscribe = pb.authStore.onChange(() => {
+      setAuthRevision((value) => value + 1);
+    });
+    return () => unsubscribe();
+  }, []);
+
   const refreshCloudFlows = useCallback(async () => {
     if (!pb || !isAuthenticated || !authUserId) {
       setCloudFlows([]);
